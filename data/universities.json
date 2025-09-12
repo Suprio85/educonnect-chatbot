@@ -1,0 +1,200 @@
+[
+  {
+    "university_name": "MIT",
+    "location": "Cambridge, Massachusetts, USA",
+    "rank": 1,
+    "tuition_fee": 55000,
+    "acceptance_rate": "7%",
+    "requirements": {
+      "minimum_gpa": 3.8,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based"]
+    },
+    "programs": [
+      "Computer Science", 
+      "Mechanical Engineering", 
+      "Economics"
+    ],
+    "website": "https://www.mit.edu"
+  },
+  {
+    "university_name": "Stanford University",
+    "location": "Stanford, California, USA",
+    "rank": 2,
+    "tuition_fee": 58000,
+    "acceptance_rate": "4%",
+    "requirements": {
+      "minimum_gpa": 3.9,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "Athletic"]
+    },
+    "programs": [
+      "Computer Science",
+      "Business Administration",
+      "Engineering",
+      "Medicine",
+      "Law"
+    ],
+    "website": "https://www.stanford.edu"
+  },
+  {
+    "university_name": "University of California, Berkeley",
+    "location": "Berkeley, California, USA",
+    "rank": 15,
+    "tuition_fee": 45000,
+    "acceptance_rate": "17%",
+    "requirements": {
+      "minimum_gpa": 3.7,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "State grants"]
+    },
+    "programs": [
+      "Computer Science",
+      "Engineering",
+      "Business",
+      "Liberal Arts",
+      "Environmental Science"
+    ],
+    "website": "https://www.berkeley.edu"
+  },
+  {
+    "university_name": "Carnegie Mellon University",
+    "location": "Pittsburgh, Pennsylvania, USA",
+    "rank": 25,
+    "tuition_fee": 59000,
+    "acceptance_rate": "13%",
+    "requirements": {
+      "minimum_gpa": 3.8,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based"]
+    },
+    "programs": [
+      "Computer Science",
+      "Robotics",
+      "Engineering",
+      "Fine Arts",
+      "Business"
+    ],
+    "website": "https://www.cmu.edu"
+  },
+  {
+    "university_name": "University of Washington",
+    "location": "Seattle, Washington, USA",
+    "rank": 40,
+    "tuition_fee": 38000,
+    "acceptance_rate": "48%",
+    "requirements": {
+      "minimum_gpa": 3.5,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "State grants"]
+    },
+    "programs": [
+      "Computer Science",
+      "Engineering",
+      "Medicine",
+      "Business",
+      "Public Health"
+    ],
+    "website": "https://www.washington.edu"
+  },
+  {
+    "university_name": "Georgia Institute of Technology",
+    "location": "Atlanta, Georgia, USA",
+    "rank": 35,
+    "tuition_fee": 32000,
+    "acceptance_rate": "21%",
+    "requirements": {
+      "minimum_gpa": 3.7,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "State grants"]
+    },
+    "programs": [
+      "Engineering",
+      "Computer Science",
+      "Business",
+      "Architecture",
+      "Sciences"
+    ],
+    "website": "https://www.gatech.edu"
+  },
+  {
+    "university_name": "University of Texas at Austin",
+    "location": "Austin, Texas, USA",
+    "rank": 45,
+    "tuition_fee": 28000,
+    "acceptance_rate": "32%",
+    "requirements": {
+      "minimum_gpa": 3.4,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "State grants"]
+    },
+    "programs": [
+      "Engineering",
+      "Business",
+      "Computer Science",
+      "Liberal Arts",
+      "Natural Sciences"
+    ],
+    "website": "https://www.utexas.edu"
+  },
+  {
+    "university_name": "Purdue University",
+    "location": "West Lafayette, Indiana, USA",
+    "rank": 55,
+    "tuition_fee": 35000,
+    "acceptance_rate": "58%",
+    "requirements": {
+      "minimum_gpa": 3.2,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "State grants"]
+    },
+    "programs": [
+      "Engineering",
+      "Computer Science",
+      "Agriculture",
+      "Business",
+      "Aviation"
+    ],
+    "website": "https://www.purdue.edu"
+  },
+  {
+    "university_name": "Arizona State University",
+    "location": "Tempe, Arizona, USA",
+    "rank": 75,
+    "tuition_fee": 25000,
+    "acceptance_rate": "85%",
+    "requirements": {
+      "minimum_gpa": 3.0,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "State grants"]
+    },
+    "programs": [
+      "Engineering",
+      "Business",
+      "Computer Science",
+      "Liberal Arts",
+      "Journalism"
+    ],
+    "website": "https://www.asu.edu"
+  },
+  {
+    "university_name": "University of Florida",
+    "location": "Gainesville, Florida, USA",
+    "rank": 50,
+    "tuition_fee": 22000,
+    "acceptance_rate": "37%",
+    "requirements": {
+      "minimum_gpa": 3.3,
+      "required_tests": ["SAT", "TOEFL"],
+      "scholarship_options": ["Need-based", "Merit-based", "State grants", "Bright Futures"]
+    },
+    "programs": [
+      "Engineering",
+      "Business",
+      "Medicine",
+      "Journalism",
+      "Agriculture"
+    ],
+    "website": "https://www.ufl.edu"
+  }
+]

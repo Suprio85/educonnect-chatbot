@@ -1,0 +1,14 @@
+Flask
+fastapi
+uvicorn
+neo4j
+sentence-transformers
+langchain
+langchain-google-genai
+langchain-experimental 
+python-dotenv
+requests
+pydantic
+pypdf
+typing
+
