@@ -5,10 +5,13 @@ neo4j
 sentence-transformers
 langchain
 langchain-google-genai
-langchain-experimental 
+langchain-experimental
+langchain-core
+langchain-neo4j
 python-dotenv
 requests
 pydantic
-pypdf
+pypdf2
 typing
+
 
