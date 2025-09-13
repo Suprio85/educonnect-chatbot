@@ -54,7 +54,7 @@ def convert_to_docs(folder_path: str) -> List[Document]:
                     }
                 elif isinstance(doc, str):
                     page_content = doc
-                    metadata = {            
+                    metadata = {
                         "file_type": file_extension
                     }
                 else:

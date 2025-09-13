@@ -10,12 +10,3 @@ class SimpleEmbeddings:
     def embed_documents(self, docs):
         return [self.model.encode(doc).tolist() for doc in docs]
 
-
-if __name__ == "__main__":
-    embeddings = SimpleEmbeddings()
-    vector = embeddings.embed_query("MIT is a top AI university")
-    print("Embedding length:", len(vector))
-
-    docs = ["Harvard University", "Stanford University"]
-    vectors = embeddings.embed_documents(docs)
-    print("Vectors:", vectors)
