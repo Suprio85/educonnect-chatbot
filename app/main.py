@@ -26,6 +26,7 @@ app = FastAPI(title="EduConnect Chatbot API", version="0.1.0")
 _init_lock = threading.Lock()
 _graph_service: Optional[GraphService] = None
 _hybrid_chain = None
+_default_graph_only: bool = False  # Toggle for graph-only vs hybrid mode
 
 
 def _initialize_if_needed() -> None:
@@ -36,8 +37,14 @@ def _initialize_if_needed() -> None:
 		if _hybrid_chain is not None:
 			return
 		start = time.time()
-		# build_graph=True only first time to populate + vector store
+		# Initialize GraphService 
 		_graph_service = GraphService()
+			
+		# Ensure vector store exists for semantic retrieval
+		if not hasattr(_graph_service, 'vector_store') or _graph_service.vector_store is None:
+			print("[INIT] Creating vector store for semantic retrieval...")
+			_graph_service.create_vector_store()
+		
 		_hybrid_chain = create_hybrid_rag_chain(_graph_service)
 		elapsed = time.time() - start
 		print(f"[INIT] Graph + Hybrid chain ready in {elapsed:.2f}s")
@@ -45,6 +52,7 @@ def _initialize_if_needed() -> None:
 
 class ChatRequest(BaseModel):
 	question: str
+	graph_only: Optional[bool] = None  # If None, uses default setting
 	stream: Optional[bool] = False  
 	include_context: Optional[bool] = False
 
@@ -53,6 +61,7 @@ class ChatResponse(BaseModel):
 	answer: str
 	cached: bool
 	elapsed_ms: float
+	mode: str  # "graph_only" or "hybrid"
 	graph_used: bool
 	semantic_used: bool
 	# Optional metadata
@@ -112,38 +121,51 @@ def chat(req: ChatRequest):
 
 	_initialize_if_needed()
 
-	cached_payload = _cache.get(req.question)
+	# Determine mode: use request-specific setting or global default
+	use_graph_only = _default_graph_only if req.graph_only is None else req.graph_only
+	cache_key = f"{req.question}::{use_graph_only}"
+	
+	cached_payload = _cache.get(cache_key)
 	if cached_payload is not None:
 		return ChatResponse(
 			answer=cached_payload["answer"],
 			cached=True,
 			elapsed_ms=0.0,
+			mode=cached_payload.get("mode", "hybrid"),
 			graph_used=cached_payload.get("graph_used", True),
 			semantic_used=cached_payload.get("semantic_used", True),
 			graph_answer=cached_payload.get("graph_answer") if req.include_context else None,
 			semantic_chunks=cached_payload.get("semantic_chunks") if req.include_context else None,
 		)
+	
 	start = time.time()
 	try:
-		result = _hybrid_chain.invoke({"question": req.question})
+		invoke_params = {"question": req.question}
+		if use_graph_only:
+			invoke_params["graph_only"] = True
+		result = _hybrid_chain.invoke(invoke_params)
 	except Exception as e:
 		raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
 	elapsed_ms = (time.time() - start) * 1000
 
 	semantic_docs = result.get("semantic_documents") or []
+	mode = result.get("mode", "hybrid")
+	
 	payload = {
 		"answer": result["answer"],
+		"mode": mode,
 		"graph_answer": result.get("graph_answer"),
 		"semantic_chunks": len(semantic_docs),
 		"graph_used": bool(result.get("graph_answer")),
 		"semantic_used": len(semantic_docs) > 0,
 	}
-	_cache.set(req.question, payload)
+	_cache.set(cache_key, payload)
 
 	return ChatResponse(
 		answer=payload["answer"],
 		cached=False,
 		elapsed_ms=elapsed_ms,
+		mode=payload["mode"],
 		graph_used=payload["graph_used"],
 		semantic_used=payload["semantic_used"],
 		graph_answer=payload["graph_answer"] if req.include_context else None,
@@ -156,6 +178,30 @@ def clear_cache():
 	global _cache
 	_cache = _LRUCache(max_size=128)
 	return {"cleared": True}
+
+
+@app.get("/mode")
+def get_mode():
+	"""Get current default mode setting"""
+	return {
+		"default_graph_only": _default_graph_only,
+		"mode": "graph_only" if _default_graph_only else "hybrid"
+	}
+
+
+class ModeRequest(BaseModel):
+	graph_only: bool
+
+
+@app.post("/mode")
+def set_mode(req: ModeRequest):
+	global _default_graph_only
+	_default_graph_only = req.graph_only
+	return {
+		"updated": True,
+		"default_graph_only": _default_graph_only,
+		"mode": "graph_only" if _default_graph_only else "hybrid"
+	}
 
 
 if __name__ == "__main__":

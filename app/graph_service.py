@@ -1,14 +1,11 @@
 from config import Neo4jConfig, GeminiConfig, DATA_LOCATION
 from langchain_neo4j import Neo4jGraph
 from langchain_community.vectorstores import Neo4jVector
-from langchain_neo4j.chains.graph_qa.cypher import GraphCypherQAChain
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from convert_to_docs import convert_to_docs
 import json
-
-
 from embedding import SimpleEmbeddings
 
 class GraphService:
@@ -32,10 +29,10 @@ class GraphService:
         if build_graph:
             self._populate_graph()
             # self.populate_with_llm()
-            self.create_vector_store()
 
             print("Graph has been initialized and documents have been added.")
             print("Graph details and visualization can be found in the Neo4j dashboard.")
+        self.create_vector_store()
 
     def _clear_graph(self):
         self.graph.query("MATCH (n) DETACH DELETE n")
@@ -313,18 +310,23 @@ class GraphService:
         self.graph.add_graph_documents(graph_doc)
 
     def create_vector_store(self):
-        self.vector_store = Neo4jVector.from_existing_graph(
-        embedding=self.embeddings,
-        url=Neo4jConfig.URI,
-        username=Neo4jConfig.USER,
-        password=Neo4jConfig.PASSWORD,
-        index_name="university_index",
-        node_label="University",
-        text_node_properties=["name", "location", "website", "Rank", "tuition_fee", "acceptance_rate"],
-        embedding_node_property="embedding",
-        search_type='hybrid' 
-        )
-        print("Vector store created successfully!")
+        try:
+            self.vector_store = Neo4jVector.from_existing_graph(
+            embedding=self.embeddings,
+            url=Neo4jConfig.URI,
+            username=Neo4jConfig.USER,
+            password=Neo4jConfig.PASSWORD,
+            index_name="university_index",
+            node_label="University",
+            text_node_properties=["name", "location", "website", "rank", "tuition_fee", "acceptance_rate"],  # Fixed: 'rank' not 'Rank'
+            embedding_node_property="embedding",
+            search_type='hybrid' 
+            )
+            print("Vector store created successfully!")
+        except Exception as e:
+            print(f"Warning: Could not create vector store: {e}")
+            print("Semantic retrieval will not be available")
+            self.vector_store = None
 
 
 

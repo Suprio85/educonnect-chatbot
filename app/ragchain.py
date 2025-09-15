@@ -1,6 +1,5 @@
 from langchain.chains import RetrievalQA
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
-from config import Neo4jConfig, GeminiConfig, DATA_LOCATION
 from langchain_neo4j.chains.graph_qa.cypher import GraphCypherQAChain
 from typing import Any, Dict, List
 import json
@@ -44,24 +43,30 @@ class HybridRAGChain:
         question = inputs.get("question") or inputs.get("query")
         if not question:
             raise ValueError("'question' key is required in inputs")
+        
+        graph_only = inputs.get("graph_only", False)
 
         # 1. Structured graph QA (returns cypher + answer)
         graph_result = self.graph_chain.invoke({"query": question})
         graph_answer = graph_result.get("result", "")
         cypher_steps = graph_result.get("intermediate_steps", [])
 
-        # 2. Semantic retrieval
+        # 2. Semantic retrieval (skip if graph_only mode)
         semantic_docs = []
-        if self.retriever is not None:
+        if not graph_only and self.retriever is not None:
             try:
-                semantic_docs = self.retriever.get_relevant_documents(question)
+                semantic_docs = self.retriever.invoke(question)
             except Exception as e:
                 semantic_docs = []
                 graph_answer += f"\n(Note: semantic retrieval failed: {e})"
 
-        semantic_context = "\n---\n".join(d.page_content for d in semantic_docs[:6]) if semantic_docs else "(No semantic context retrieved)"
+        # 3. Prepare context based on mode
+        if graph_only:
+            semantic_context = "(Graph-only mode: semantic context skipped for faster response)"
+        else:
+            semantic_context = "\n---\n".join(d.page_content for d in semantic_docs[:6]) if semantic_docs else "(No semantic context retrieved)"
 
-        # 3. final answer
+        # 4. LLM synthesis with appropriate context
         messages = self.combine_prompt.format_messages(
             question=question,
             graph_answer=graph_answer,
@@ -77,6 +82,7 @@ class HybridRAGChain:
             "semantic_documents": semantic_docs,
             "cypher_steps": cypher_steps,
             "raw_graph_result": graph_result,
+            "mode": "graph_only" if graph_only else "hybrid"
         }
 
 def create_hybrid_rag_chain(graph_service):
@@ -86,32 +92,17 @@ def create_hybrid_rag_chain(graph_service):
     2. Neo4j vector embeddings (semantic search)
     """
 
+    schema =  graph_service.graph.schema
+    schema = schema.replace("{", "(")
+    schema = schema.replace("}", ")")
+
+
     cypher_prompt = PromptTemplate(
         template="""
         You are an expert at converting natural language questions about universities into Cypher queries.
         The graph schema includes these node types and relationships:
 
-        NODES:
-        - University: name, location, rank, tuition_fee, acceptance_rate, website
-        - Location: name, city, state, country
-        - Program: name
-        - Requirements: university_name, minimum_gpa
-        - Test: name (SAT, TOEFL, etc.)
-        - Scholarship: type (Need-based, Merit-based, Athletic, etc.)
-        - Tier: name (Top 10, Top 25, Top 50, Other)
-        - FeeRange: range (High, Medium, Low)
-        - AcceptanceCategory: category (Highly Selective, Selective, Moderately Selective)
-
-        RELATIONSHIPS:
-        - (University)-[:LOCATED_IN]->(Location)
-        - (University)-[:OFFERS]->(Program)
-        - (University)-[:HAS_REQUIREMENTS]->(Requirements)
-        - (University)-[:REQUIRES_TEST]->(Test)
-        - (University)-[:OFFERS_SCHOLARSHIP]->(Scholarship)
-        - (University)-[:BELONGS_TO_TIER]->(Tier)
-        - (University)-[:HAS_FEE_RANGE]->(FeeRange)
-        - (University)-[:HAS_ACCEPTANCE_RATE]->(AcceptanceCategory)
-        - (Requirements)-[:INCLUDES_TEST]->(Test)
+        {schema}
 
         IMPORTANT GUIDELINES:
         1. Always use proper Cypher syntax
@@ -134,7 +125,7 @@ def create_hybrid_rag_chain(graph_service):
         Question: {question}
         Generate only the Cypher query, no explanations
         Cypher:""",
-        input_variables=["question"]
+        input_variables=["schema", "question"]
     )
    
 
@@ -154,7 +145,7 @@ def create_hybrid_rag_chain(graph_service):
     if getattr(graph_service, "vector_store", None) is not None:
         try:
             retriever = graph_service.vector_store.as_retriever(
-                search_type="hybrid", 
+                search_type="hybrid",
                 search_kwargs={"k": 6}
             )
         except Exception:
