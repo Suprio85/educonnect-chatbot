@@ -5,7 +5,7 @@
  - /chat endpoint (question -> answer)
 
 Run:
-  uvicorn app.main:app --host 0.0.0.0 --port 8000
+  uvicorn main:app --host 0.0.0.0 --port 8000
 """
 
 import time
@@ -206,4 +206,4 @@ def set_mode(req: ModeRequest):
 
 if __name__ == "__main__":
 	import uvicorn
-	uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+	uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

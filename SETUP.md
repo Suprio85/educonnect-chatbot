@@ -7,22 +7,31 @@ This guide provides step-by-step instructions to set up and run the EduConnect C
 ## 1. Prerequisites
 
 - **Python 3.10+** (Recommended: 3.11 or 3.13)
-- **Neo4j Database** (Cloud: Neo4j Aura or Local)
+- **Neo4j Aura Cloud Database** (Free tier available at https://neo4j.com/aura/)
 - **Google Gemini API Key** (for LLM-powered features)
 - **Internet connection** (for package installation and LLM access)
 
 ---
 
-## 2. Clone the Repository
+## 2. Setup Neo4j Aura Database
+
+1. **Create a free Neo4j Aura account** at https://neo4j.com/aura/
+2. **Create a new database instance** (select the free tier)
+3. **Download the connection details** (.txt file) provided by Aura
+4. **Note down your database URI, username, and password** - you'll need these for environment variables
+
+---
+
+## 3. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone <repo-url>
 cd educonnect-chatbot
 ```
 
 ---
 
-## 3. Python Environment Setup
+## 4. Python Environment Setup
 
 It is recommended to use a virtual environment:
 
@@ -33,7 +42,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 ---
 
-## 4. Install Dependencies
+## 5. Install Dependencies
 
 All required packages are listed in `requirements.txt`:
 
@@ -43,27 +52,34 @@ pip install -r requirements.txt
 
 ---
 
-## 5. Environment Variables
+## 6. Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
 
 ```
-NEO4J_URI=bolt://<your-neo4j-host>:7687
-NEO4J_USER=<your-username>
-NEO4J_PASSWORD=<your-password>
-GEMINI_API_KEY=<your-google-gemini-api-key>
+# Neo4j Aura Database (use the connection details from your Aura instance)
+NEO4J_URI=neo4j+s://your-instance-id.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your-generated-password
+
+# Google Gemini API
+GEMINI_API_KEY=your-google-gemini-api-key
 GEMINI_MODEL_NAME=gemini-pro
 GEMINI_MAX_TOKENS=2048
 GEMINI_TEMPERATURE=0.2
+
+# Data location
 DATA_LOCATION=../data
 ```
 
-- Adjust `DATA_LOCATION` if your data folder is elsewhere.
-- Use a read-only Neo4j user for production.
+**Important Notes:**
+- Use the **exact connection details** provided by Neo4j Aura (URI format will be `neo4j+s://...`)
+- Get your **Gemini API key** from Google AI Studio: https://makersuite.google.com/app/apikey
+- Adjust `DATA_LOCATION` if your data folder is elsewhere
 
 ---
 
-## 6. Prepare Data
+## 7. Prepare Data
 
 - Place your `universities.json` file in the `data/` directory.
 - The file should contain an array of university objects with properties as described in the architecture documentation.
@@ -76,7 +92,7 @@ DATA_LOCATION=../data
  cd app
 ```
 
-## 7. Initialize the Graph and Vector Store
+## 8. Initialize the Graph and Vector Store
 
 The first run should build the graph and vector index:
 
@@ -91,7 +107,7 @@ Alternatively, you can add a CLI or script to automate this step.
 
 ---
 
-## 8. Run the FastAPI Server
+## 9. Run the FastAPI Server
 
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -102,7 +118,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-## 9. API Usage
+## 10. API Usage
 
 ### Chat Endpoint
 
@@ -131,16 +147,16 @@ POST /clear-cache
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
-- **Neo4j connection errors:** Check your URI, credentials, and network/firewall settings.
-- **Gemini API errors:** Ensure your API key is valid and has sufficient quota.
-- **Data ingestion issues:** Validate your `universities.json` format and required fields.
-- **Vector store not found:** Make sure you ran the graph initialization step.
+- **Neo4j connection errors:** Check your Aura connection details, ensure you're using the correct URI format (`neo4j+s://...`)
+- **Gemini API errors:** Ensure your API key is valid and has sufficient quota
+- **Data ingestion issues:** Validate your `universities.json` format and required fields
+- **Vector store not found:** Make sure you ran the graph initialization step
 
 ---
 
-## 11. Customization
+## 12. Customization
 
 - To change the data model, edit `app/graph_service.py` and update the ingestion logic.
 - To adjust LLM prompt behavior, modify `app/ragchain.py`.
@@ -148,6 +164,79 @@ POST /clear-cache
 
 ---
 
-## 12. Support
+## 13. Docker Setup
+
+### Prerequisites for Docker
+
+- **Docker** installed on your system
+- **Docker Compose** (usually included with Docker Desktop)
+
+### Build and Run with Docker
+
+1. **Ensure your `.env` file is in the root directory** with all required environment variables.
+
+2. **Build and start the container:**
+
+```bash
+docker-compose up --build
+```
+
+3. **For production deployment (detached mode):**
+
+```bash
+docker-compose up -d --build
+```
+
+4. **View logs:**
+
+```bash
+docker-compose logs -f educonnect-api
+```
+
+5. **Stop the container:**
+
+```bash
+docker-compose down
+```
+
+### Docker Environment Notes
+
+- The Docker setup includes automatic restarts and health checks
+- Application runs as a non-root user for security
+- Data and app directories are mounted as volumes for development
+- For production, consider removing the `--reload` flag and volume mounts
+
+### Render Deployment with Docker
+
+For deploying to Render.com:
+
+1. **Create a `render.yaml` file:**
+
+```yaml
+services:
+  - type: web
+    name: educonnect-chatbot
+    env: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: starter
+    envVars:
+      - key: NEO4J_URI
+        value: neo4j+s://your-aura-instance.databases.neo4j.io
+      - key: NEO4J_USER
+        value: neo4j
+      - key: NEO4J_PASSWORD
+        value: your-aura-password
+      - key: GEMINI_API_KEY
+        value: your-gemini-api-key
+```
+
+2. **Connect your GitHub repository to Render**
+3. **Set environment variables in Render dashboard using your Neo4j Aura connection details**
+4. **Deploy automatically on git push**
+
+---
+
+## 14. Support
 
 For questions or issues, please open an issue in the repository or contact the maintainer.

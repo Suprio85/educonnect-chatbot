@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: educonnect-chatbot
+    env: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: starter
+    envVars:
+      - key: NEO4J_URI
+        value: neo4j+s://your-aura-instance.databases.neo4j.io
+      - key: NEO4J_USER
+        value: neo4j
+      - key: NEO4J_PASSWORD
+        value: your-aura-generated-password
+      - key: GEMINI_API_KEY
+        value: your-gemini-api-key
+      - key: GEMINI_MODEL_NAME
+        value: gemini-pro
+      - key: GEMINI_MAX_TOKENS
+        value: 2048
+      - key: GEMINI_TEMPERATURE
+        value: 0.2
+      - key: DATA_LOCATION
+        value: ../data
+    buildFilter:
+      paths:
+        - app/**
+        - data/**
+        - requirements.txt
+        - Dockerfile
+        - .env
+    healthCheckPath: /health
+    numInstances: 1
